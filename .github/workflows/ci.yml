@@ -12,6 +12,10 @@ concurrency:
   group: ci-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
+env:
+  NEXT_TELEMETRY_DISABLED: "1"
+  VERCEL_TELEMETRY_DISABLED: "1"
+
 jobs:
   lint:
     runs-on: ubuntu-latest

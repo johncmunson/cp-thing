@@ -21,7 +21,8 @@ concurrency:
 env:
   NODE_VERSION: 24
   PNPM_VERSION: 10.28.0
-  VERCEL_CLI_VERSION: 54.10.3
+  NEXT_TELEMETRY_DISABLED: "1"
+  VERCEL_TELEMETRY_DISABLED: "1"
   VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
   VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
   VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
@@ -44,6 +45,8 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
 
       - name: Compute preview names
         id: preview
@@ -92,8 +95,8 @@ jobs:
         run: |
           set -euo pipefail
 
-          pnpm dlx vercel@${VERCEL_CLI_VERSION} env rm DATABASE_URL preview "$GIT_BRANCH" --yes || true
-          pnpm dlx vercel@${VERCEL_CLI_VERSION} env rm DATABASE_URL_UNPOOLED preview "$GIT_BRANCH" --yes || true
+          pnpm exec vercel env rm DATABASE_URL preview "$GIT_BRANCH" --yes || true
+          pnpm exec vercel env rm DATABASE_URL_UNPOOLED preview "$GIT_BRANCH" --yes || true
 
       - name: Delete Neon preview branch
         uses: neondatabase/delete-branch-action@v3

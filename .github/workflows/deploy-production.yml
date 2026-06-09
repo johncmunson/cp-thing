@@ -16,7 +16,8 @@ concurrency:
 env:
   NODE_VERSION: 24
   PNPM_VERSION: 10.28.0
-  VERCEL_CLI_VERSION: 54.10.3
+  NEXT_TELEMETRY_DISABLED: "1"
+  VERCEL_TELEMETRY_DISABLED: "1"
   VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
   VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
   VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
@@ -44,20 +45,20 @@ jobs:
       - run: pnpm install --frozen-lockfile
 
       - name: Pull Vercel production environment
-        run: pnpm dlx vercel@${VERCEL_CLI_VERSION} pull --yes --environment=production
+        run: pnpm exec vercel pull --yes --environment=production
 
       - name: Build Vercel production artifacts
-        run: pnpm dlx vercel@${VERCEL_CLI_VERSION} build --prod --yes
+        run: pnpm exec vercel build --prod --yes
 
       - name: Run production database migrations
-        run: pnpm dlx vercel@${VERCEL_CLI_VERSION} env run --environment=production -- pnpm db:migrate
+        run: pnpm exec vercel env run --environment=production -- pnpm db:migrate
 
       - name: Deploy Vercel production
         id: deploy
         run: |
           set -euo pipefail
 
-          deployment_url="$(pnpm dlx vercel@${VERCEL_CLI_VERSION} deploy --prebuilt --prod --yes)"
+          deployment_url="$(pnpm exec vercel deploy --prebuilt --prod --yes)"
           echo "url=$deployment_url" >> "$GITHUB_OUTPUT"
           {
             echo "### Production deployment"
