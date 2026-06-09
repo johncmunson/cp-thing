@@ -7,6 +7,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "typecheck": "next typegen && tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "pi": "NODE_OPTIONS=\"$NODE_OPTIONS --import jiti/register --import ./lib/envConfig.ts\" pi"
   },
   "dependencies": {
@@ -20,10 +23,14 @@
     "@types/node": "^25.9.2",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@vitest/browser-playwright": "^4.1.8",
+    "@vitest/coverage-v8": "^4.1.8",
     "eslint": "^9",
     "eslint-config-next": "16.2.7",
     "jiti": "^2.7.0",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^4.1.8",
+    "vitest-browser-react": "^2.2.0"
   }
 }
