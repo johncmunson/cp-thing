@@ -1,3 +1,9 @@
 {
-  "mcpServers": {}
+  "mcpServers": {
+    "linear": {
+      "url": "https://mcp.linear.app/mcp",
+      "auth": "bearer",
+      "bearerToken": "${LINEAR_API_KEY}"
+    }
+  }
 }
