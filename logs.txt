@@ -1,0 +1,798 @@
+Current runner version: '2.334.0'
+##[group]Runner Image Provisioner
+Hosted Compute Agent
+Version: 20260527.539
+Commit: a891dd388383b896fa6ac04a82c0b75cec981078
+Build Date: 2026-05-27T21:39:57Z
+Worker ID: {65c330f3-53a2-4f14-967e-70118cc467b0}
+Azure Region: eastus2
+##[endgroup]
+##[group]Operating System
+Ubuntu
+24.04.4
+LTS
+##[endgroup]
+##[group]Runner Image
+Image: ubuntu-24.04
+Version: 20260607.184.1
+Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20260607.184/images/ubuntu/Ubuntu2404-Readme.md
+Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20260607.184
+##[endgroup]
+##[group]GITHUB_TOKEN Permissions
+Contents: read
+Issues: write
+Metadata: read
+PullRequests: read
+##[endgroup]
+Secret source: Actions
+Prepare workflow directory
+Prepare all required actions
+Getting action download info
+Download action repository 'actions/checkout@v4' (SHA:34e114876b0b11c390a56381ad16ebd13914f8d5)
+Download action repository 'pnpm/action-setup@v4' (SHA:b906affcce14559ad1aafd4ab0e942779e9f58b1)
+Download action repository 'actions/setup-node@v4' (SHA:49933ea5288caeca8642d1e84afbd3f7d6820020)
+Download action repository 'neondatabase/create-branch-action@v5' (SHA:34f619c41c6e67b4f2f13f1c6eae90827a5f2cf4)
+Download action repository 'actions/github-script@v7' (SHA:f28e40c7f34bde8b3046d885e986cb6290c5673b)
+Getting action download info
+Complete job name: Deploy Preview
+##[group]Run actions/checkout@v4
+with:
+  ref: f840fb1cb6c481d21239ba45230758ccbe0a552b
+  repository: johncmunson/cp-thing
+  token: ***
+  ssh-strict: true
+  ssh-user: git
+  persist-credentials: true
+  clean: true
+  sparse-checkout-cone-mode: true
+  fetch-depth: 1
+  fetch-tags: false
+  show-progress: true
+  lfs: false
+  submodules: false
+  set-safe-directory: true
+env:
+  NODE_VERSION: 24
+  PNPM_VERSION: 10.28.0
+  VERCEL_CLI_VERSION: 54.10.3
+  VERCEL_ORG_ID: ***
+  VERCEL_PROJECT_ID: ***
+  VERCEL_TOKEN: ***
+  NEON_PROJECT_ID: blue-base-82730697
+##[endgroup]
+Syncing repository: johncmunson/cp-thing
+##[group]Getting Git version info
+Working directory is '/home/runner/work/cp-thing/cp-thing'
+[command]/usr/bin/git version
+git version 2.54.0
+##[endgroup]
+Temporarily overriding HOME='/home/runner/work/_temp/3447f7d3-a435-4e6f-bcbc-07d421dccf2a' before making global git config changes
+Adding repository directory to the temporary git global config as a safe directory
+[command]/usr/bin/git config --global --add safe.directory /home/runner/work/cp-thing/cp-thing
+Deleting the contents of '/home/runner/work/cp-thing/cp-thing'
+##[group]Initializing the repository
+[command]/usr/bin/git init /home/runner/work/cp-thing/cp-thing
+hint: Using 'master' as the name for the initial branch. This default branch name
+hint: will change to "main" in Git 3.0. To configure the initial branch name
+hint: to use in all of your new repositories, which will suppress this warning,
+hint: call:
+hint:
+hint: 	git config --global init.defaultBranch <name>
+hint:
+hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+hint: 'development'. The just-created branch can be renamed via this command:
+hint:
+hint: 	git branch -m <name>
+hint:
+hint: Disable this message with "git config set advice.defaultBranchName false"
+Initialized empty Git repository in /home/runner/work/cp-thing/cp-thing/.git/
+[command]/usr/bin/git remote add origin https://github.com/johncmunson/cp-thing
+##[endgroup]
+##[group]Disabling automatic garbage collection
+[command]/usr/bin/git config --local gc.auto 0
+##[endgroup]
+##[group]Setting up auth
+[command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+[command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+[command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+[command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+[command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+[command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+[command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+##[endgroup]
+##[group]Fetching the repository
+[command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin f840fb1cb6c481d21239ba45230758ccbe0a552b
+From https://github.com/johncmunson/cp-thing
+ * branch            f840fb1cb6c481d21239ba45230758ccbe0a552b -> FETCH_HEAD
+##[endgroup]
+##[group]Determining the checkout info
+##[endgroup]
+[command]/usr/bin/git sparse-checkout disable
+[command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+##[group]Checking out the ref
+[command]/usr/bin/git checkout --progress --force f840fb1cb6c481d21239ba45230758ccbe0a552b
+Note: switching to 'f840fb1cb6c481d21239ba45230758ccbe0a552b'.
+
+You are in 'detached HEAD' state. You can look around, make experimental
+changes and commit them, and you can discard any commits you make in this
+state without impacting any branches by switching back to a branch.
+
+If you want to create a new branch to retain commits you create, you may
+do so (now or later) by using -c with the switch command. Example:
+
+  git switch -c <new-branch-name>
+
+Or undo this operation with:
+
+  git switch -
+
+Turn off this advice by setting config variable advice.detachedHead to false
+
+HEAD is now at f840fb1 more github workflows so that it owns deployments
+##[endgroup]
+[command]/usr/bin/git log -1 --format=%H
+f840fb1cb6c481d21239ba45230758ccbe0a552b
+##[group]Run pnpm/action-setup@v4
+with:
+  version: 10.28.0
+  dest: ~/setup-pnpm
+  run_install: null
+  cache: false
+  cache_dependency_path: pnpm-lock.yaml
+  package_json_file: package.json
+  standalone: false
+env:
+  NODE_VERSION: 24
+  PNPM_VERSION: 10.28.0
+  VERCEL_CLI_VERSION: 54.10.3
+  VERCEL_ORG_ID: ***
+  VERCEL_PROJECT_ID: ***
+  VERCEL_TOKEN: ***
+  NEON_PROJECT_ID: blue-base-82730697
+##[endgroup]
+##[group]Running self-installer...
+Progress: resolved 1, reused 0, downloaded 0, added 0
+Packages: +1
++
+Progress: resolved 1, reused 0, downloaded 1, added 1, done
+
+dependencies:
++ pnpm 10.28.0 (11.5.2 is available)
+
+Done in 874ms
+##[endgroup]
+Installation Completed!
+##[group]Run actions/setup-node@v4
+with:
+  node-version: 24
+  cache: pnpm
+  always-auth: false
+  check-latest: false
+  token: ***
+env:
+  NODE_VERSION: 24
+  PNPM_VERSION: 10.28.0
+  VERCEL_CLI_VERSION: 54.10.3
+  VERCEL_ORG_ID: ***
+  VERCEL_PROJECT_ID: ***
+  VERCEL_TOKEN: ***
+  NEON_PROJECT_ID: blue-base-82730697
+  PNPM_HOME: /home/runner/setup-pnpm/node_modules/.bin
+##[endgroup]
+Found in cache @ /opt/hostedtoolcache/node/24.16.0/x64
+##[group]Environment details
+node: v24.16.0
+npm: 11.13.0
+yarn: 1.22.22
+##[endgroup]
+[command]/home/runner/setup-pnpm/node_modules/.bin/pnpm store path --silent
+/home/runner/setup-pnpm/node_modules/.bin/store/v10
+Cache hit for: node-cache-Linux-x64-pnpm-79f8f474ad5625688d33e586d9fe5de0b3305b93e9b72aef2fe4ec4f00efc678
+Received 189733785 of 189733785 (100.0%), 211.6 MBs/sec
+Cache Size: ~181 MB (189733785 B)
+[command]/usr/bin/tar -xf /home/runner/work/_temp/eccc44cf-97a7-4bba-8d4f-52e671805ce3/cache.tzst -P -C /home/runner/work/cp-thing/cp-thing --use-compress-program unzstd
+Cache restored successfully
+Cache restored from key: node-cache-Linux-x64-pnpm-79f8f474ad5625688d33e586d9fe5de0b3305b93e9b72aef2fe4ec4f00efc678
+##[group]Run pnpm install --frozen-lockfile
+[36;1mpnpm install --frozen-lockfile[0m
+shell: /usr/bin/bash -e {0}
+env:
+  NODE_VERSION: 24
+  PNPM_VERSION: 10.28.0
+  VERCEL_CLI_VERSION: 54.10.3
+  VERCEL_ORG_ID: ***
+  VERCEL_PROJECT_ID: ***
+  VERCEL_TOKEN: ***
+  NEON_PROJECT_ID: blue-base-82730697
+  PNPM_HOME: /home/runner/setup-pnpm/node_modules/.bin
+##[endgroup]
+Lockfile is up to date, resolution step is skipped
+Progress: resolved 1, reused 0, downloaded 0, added 0
+Packages: +410
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+Progress: resolved 410, reused 410, downloaded 0, added 410, done
+
+dependencies:
++ @next/env 16.2.7
++ next 16.2.7
++ react 19.2.4
++ react-dom 19.2.4
+
+devDependencies:
++ @tailwindcss/postcss 4.3.0
++ @types/node 25.9.2
++ @types/react 19.2.17
++ @types/react-dom 19.2.3
++ @vitest/browser-playwright 4.1.8
++ @vitest/coverage-v8 4.1.8
++ eslint 9.39.4
++ eslint-config-next 16.2.7
++ jiti 2.7.0
++ playwright 1.60.0
++ tailwindcss 4.3.0
++ typescript 5.9.3
++ vitest 4.1.8
++ vitest-browser-react 2.2.0
+
+Done in 1.4s using pnpm v10.28.0
+##[group]Run set -euo pipefail
+[36;1mset -euo pipefail[0m
+[36;1m[0m
+[36;1mbranch_slug="$(printf '%s' "$GIT_BRANCH" | tr '[:upper:]' '[:lower:]' | sed -E 's/[^a-z0-9]+/-/g; s/^-+//; s/-+$//; s/-+/-/g' | cut -c1-48)"[0m
+[36;1mif [ -z "$branch_slug" ]; then[0m
+[36;1m  branch_slug="branch"[0m
+[36;1mfi[0m
+[36;1m[0m
+[36;1mbranch_hash="$(printf '%s' "$GIT_BRANCH" | sha1sum | cut -c1-8)"[0m
+[36;1mneon_branch="preview/${branch_slug}-${branch_hash}"[0m
+[36;1msha_short="${HEAD_SHA:0:7}"[0m
+[36;1m[0m
+[36;1mecho "git_branch=$GIT_BRANCH" >> "$GITHUB_OUTPUT"[0m
+[36;1mecho "head_sha=$HEAD_SHA" >> "$GITHUB_OUTPUT"[0m
+[36;1mecho "sha_short=$sha_short" >> "$GITHUB_OUTPUT"[0m
+[36;1mecho "neon_branch=$neon_branch" >> "$GITHUB_OUTPUT"[0m
+shell: /usr/bin/bash -e {0}
+env:
+  NODE_VERSION: 24
+  PNPM_VERSION: 10.28.0
+  VERCEL_CLI_VERSION: 54.10.3
+  VERCEL_ORG_ID: ***
+  VERCEL_PROJECT_ID: ***
+  VERCEL_TOKEN: ***
+  NEON_PROJECT_ID: blue-base-82730697
+  PNPM_HOME: /home/runner/setup-pnpm/node_modules/.bin
+  GIT_BRANCH: ci-cd-2
+  HEAD_SHA: f840fb1cb6c481d21239ba45230758ccbe0a552b
+##[endgroup]
+##[warning]Unexpected input(s) 'role', valid inputs are ['project_id', 'branch_name', 'api_key', 'api_host', 'username', 'database', 'prisma', 'parent', 'suspend_timeout', 'ssl']
+##[group]Run neondatabase/create-branch-action@v5
+with:
+  project_id: blue-base-82730697
+  branch_name: preview/ci-cd-2-11109bc4
+  database: neondb
+  role: neondb_owner
+  api_key: ***
+  api_host: https://console.neon.tech/api/v2
+  prisma: false
+  suspend_timeout: 0
+  ssl: require
+env:
+  NODE_VERSION: 24
+  PNPM_VERSION: 10.28.0
+  VERCEL_CLI_VERSION: 54.10.3
+  VERCEL_ORG_ID: ***
+  VERCEL_PROJECT_ID: ***
+  VERCEL_TOKEN: ***
+  NEON_PROJECT_ID: blue-base-82730697
+  PNPM_HOME: /home/runner/setup-pnpm/node_modules/.bin
+##[endgroup]
+##[group]Run actions/setup-node@v4
+with:
+  always-auth: false
+  check-latest: false
+  token: ***
+env:
+  NODE_VERSION: 24
+  PNPM_VERSION: 10.28.0
+  VERCEL_CLI_VERSION: 54.10.3
+  VERCEL_ORG_ID: ***
+  VERCEL_PROJECT_ID: ***
+  VERCEL_TOKEN: ***
+  NEON_PROJECT_ID: blue-base-82730697
+  PNPM_HOME: /home/runner/setup-pnpm/node_modules/.bin
+##[endgroup]
+##[group]Environment details
+node: v24.16.0
+npm: 11.13.0
+yarn: 1.22.22
+##[endgroup]
+##[group]Run npm i -g neonctl@2
+[36;1mnpm i -g neonctl@2[0m
+shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+env:
+  NODE_VERSION: 24
+  PNPM_VERSION: 10.28.0
+  VERCEL_CLI_VERSION: 54.10.3
+  VERCEL_ORG_ID: ***
+  VERCEL_PROJECT_ID: ***
+  VERCEL_TOKEN: ***
+  NEON_PROJECT_ID: blue-base-82730697
+  PNPM_HOME: /home/runner/setup-pnpm/node_modules/.bin
+##[endgroup]
+
+added 155 packages in 7s
+
+50 packages are looking for funding
+  run `npm fund` for details
+##[group]Run # branch name can be prefixed with "refs/heads/"
+[36;1m# branch name can be prefixed with "refs/heads/"[0m
+[36;1mANNOTATION_COMMIT_REF=${ANNOTATION_COMMIT_REF/refs\/heads\//}[0m
+[36;1m[0m
+[36;1m# construct compact annotation JSON from scratch with all the parameters and filter our all empty values.[0m
+[36;1m# if there is no values at all, annotation_json will be empty string.[0m
+[36;1mannotation_json=$(jq -cnr '$ARGS.named | with_entries(select(.value != ""))' \[0m
+[36;1m  --arg github-commit-repo "${ANNOTATION_REPOSITORY}" \[0m
+[36;1m  --arg github-commit-author-login "${ANNOTATION_ACTOR_LOGIN}" \[0m
+[36;1m  --arg github-commit-sha "${ANNOTATION_COMMIT_SHA}" \[0m
+[36;1m  --arg github-commit-message "${ANNOTATION_COMMIT_MESSAGE}" \[0m
+[36;1m  --arg github-pr-number "${ANNOTATION_PR_NUMBER}" \[0m
+[36;1m  --arg github-pr-title "${ANNOTATION_PR_TITLE}" \[0m
+[36;1m  --arg github-commit-ref "${ANNOTATION_COMMIT_REF}" \[0m
+[36;1m  --arg github-action-ref "${ANNOTATION_ACTION_REF}" \[0m
+[36;1m)[0m
+[36;1m[0m
+[36;1m# set IFS (internal file separator) to \n to avoid JSON space being an arguments separator[0m
+[36;1mIFS=$'\n'[0m
+[36;1m[0m
+[36;1mneonctl branches create \[0m
+[36;1m  --project-id blue-base-82730697 \[0m
+[36;1m  --name "preview/ci-cd-2-11109bc4" \[0m
+[36;1m  --suspend-timeout 0 \[0m
+[36;1m  $(if [[ -n "" ]]; then echo "--parent="; fi) \[0m
+[36;1m  --output json \[0m
+[36;1m  $(if [[ -n "${annotation_json}" ]]; then echo "--annotation='$annotation_json'"; fi) \[0m
+[36;1m  2> branch_err > branch_out || true[0m
+[36;1m[0m
+[36;1mecho "::add-mask::$(cat branch_out | jq -r '.connection_uris[0].connection_parameters.password')"[0m
+[36;1mecho "branch create out:"[0m
+[36;1mcat branch_out[0m
+[36;1mif [[ -s branch_err ]]; then[0m
+[36;1m  echo "branch create err:"[0m
+[36;1m  cat branch_err[0m
+[36;1mfi[0m
+[36;1m[0m
+[36;1mif [[ $(cat branch_err) == *"already exists"* ]]; then[0m
+[36;1m[0m
+[36;1m  # Get the branch id by its name. We list all branches and filter by name[0m
+[36;1m  branch_id=$(neonctl branches list --project-id blue-base-82730697 -o json \[0m
+[36;1m      | jq -r '.[] | select(.name == "preview/ci-cd-2-11109bc4") | .id')[0m
+[36;1m[0m
+[36;1m  echo "branch exists, branch id: ${branch_id}"[0m
+[36;1m[0m
+[36;1m  echo "branch_id=${branch_id}" >> $GITHUB_OUTPUT[0m
+[36;1m  NEON_CS=$(neonctl cs ${branch_id} --project-id blue-base-82730697 --role-name  --database-name neondb --ssl require --prisma false --extended -o json)[0m
+[36;1m  DB_URL=$(echo $NEON_CS | jq -r '.connection_string')[0m
+[36;1m  DB_HOST=$(echo $NEON_CS | jq -r '.host')[0m
+[36;1m  DB_PASSWORD=$(echo $NEON_CS | jq -r '.password')[0m
+[36;1m  NEON_CS_POOLER=$(neonctl cs ${branch_id} --project-id blue-base-82730697 --role-name  --database-name neondb --ssl require --pooled --prisma false --extended -o json)[0m
+[36;1m  DB_URL_WITH_POOLER=$(echo $NEON_CS_POOLER | jq -r '.connection_string')[0m
+[36;1m  DB_HOST_WITH_POOLER=$(echo $NEON_CS_POOLER | jq -r '.host')[0m
+[36;1melif [[ $(cat branch_err) == *"ERROR:"* ]]; then[0m
+[36;1m  echo "ERROR: branch creation failed"[0m
+[36;1m  cat branch_err[0m
+[36;1m  exit 1[0m
+[36;1melse[0m
+[36;1m  branch_id=$(cat branch_out | jq --raw-output '.branch.id')[0m
+[36;1m  if [[ -z "${branch_id}" ]]; then[0m
+[36;1m    echo "ERROR: didn't get the branch id"[0m
+[36;1m    exit 1[0m
+[36;1m  fi[0m
+[36;1m[0m
+[36;1m  echo "branch doesn't exist, branch id: ${branch_id}"[0m
+[36;1m[0m
+[36;1m  echo "branch_id=${branch_id}" >> $GITHUB_OUTPUT[0m
+[36;1m  NEON_CS=$(neonctl cs ${branch_id} --project-id blue-base-82730697 --role-name  --database-name neondb --ssl require --prisma false --extended -o json)[0m
+[36;1m  DB_URL=$(echo $NEON_CS | jq -r '.connection_string')[0m
+[36;1m  DB_HOST=$(echo $NEON_CS | jq -r '.host')[0m
+[36;1m  DB_PASSWORD=$(echo $NEON_CS | jq -r '.password')[0m
+[36;1m  NEON_CS_POOLER=$(neonctl cs ${branch_id} --project-id blue-base-82730697 --role-name  --database-name neondb --ssl require --pooled --prisma false --extended -o json)[0m
+[36;1m  DB_URL_WITH_POOLER=$(echo $NEON_CS_POOLER | jq -r '.connection_string')[0m
+[36;1m  DB_HOST_WITH_POOLER=$(echo $NEON_CS_POOLER | jq -r '.host')[0m
+[36;1mfi[0m
+[36;1m[0m
+[36;1mecho "::add-mask::$DB_PASSWORD"[0m
+[36;1m[0m
+[36;1mecho "db_url=${DB_URL}" >> $GITHUB_OUTPUT[0m
+[36;1mecho "db_url_with_pooler=${DB_URL_WITH_POOLER}" >> $GITHUB_OUTPUT[0m
+[36;1mecho "***" >> $GITHUB_OUTPUT[0m
+[36;1mecho "host=${DB_HOST}" >> $GITHUB_OUTPUT[0m
+[36;1mecho "host_with_pooler=${DB_HOST_WITH_POOLER}" >> $GITHUB_OUTPUT[0m
+shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+env:
+  NODE_VERSION: 24
+  PNPM_VERSION: 10.28.0
+  VERCEL_CLI_VERSION: 54.10.3
+  VERCEL_ORG_ID: ***
+  VERCEL_PROJECT_ID: ***
+  VERCEL_TOKEN: ***
+  NEON_PROJECT_ID: blue-base-82730697
+  PNPM_HOME: /home/runner/setup-pnpm/node_modules/.bin
+  NEON_API_KEY: ***
+  NEON_API_HOST: https://console.neon.tech/api/v2
+  ANNOTATION_REPOSITORY: johncmunson/cp-thing
+  ANNOTATION_ACTOR_LOGIN: johncmunson
+  ANNOTATION_PR_NUMBER: 
+  ANNOTATION_PR_TITLE: 
+  ANNOTATION_COMMIT_SHA: f840fb1cb6c481d21239ba45230758ccbe0a552b
+  ANNOTATION_COMMIT_REF: refs/heads/ci-cd-2
+  ANNOTATION_COMMIT_MESSAGE: more github workflows so that it owns deployments
+  ANNOTATION_ACTION_REF: v5
+##[endgroup]
+branch create out:
+{
+  "branch": {
+    "id": "br-holy-shape-ap88nyzt",
+    "project_id": "blue-base-82730697",
+    "parent_id": "br-floral-lake-aprjorpo",
+    "parent_lsn": "0/1B73510",
+    "name": "preview/ci-cd-2-11109bc4",
+    "slug": "br-holy-shape-ap88nyzt",
+    "project_slug": "blue-base-82730697",
+    "current_state": "init",
+    "pending_state": "ready",
+    "state_changed_at": "2026-06-09T21:11:06Z",
+    "creation_source": "github",
+    "primary": false,
+    "default": false,
+    "protected": false,
+    "cpu_used_sec": 0,
+    "compute_time_seconds": 0,
+    "active_time_seconds": 0,
+    "written_data_bytes": 0,
+    "data_transfer_bytes": 0,
+    "created_at": "2026-06-09T21:11:06Z",
+    "updated_at": "2026-06-09T21:11:06Z",
+    "created_by": {
+      "name": "John",
+      "image": "https://avatars.githubusercontent.com/u/19480078?v=4"
+    },
+    "init_source": "parent-data"
+  },
+  "endpoints": [
+    {
+      "host": "ep-old-grass-ap7fuq8i.c-7.us-east-1.aws.neon.tech",
+      "hosts": {
+        "read_write_host": "ep-old-grass-ap7fuq8i.c-7.us-east-1.aws.neon.tech",
+        "read_write_pooled_host": "ep-old-grass-ap7fuq8i-pooler.c-7.us-east-1.aws.neon.tech"
+      },
+      "id": "ep-old-grass-ap7fuq8i",
+      "slug": "ep-old-grass-ap7fuq8i",
+      "branch_slug": "br-holy-shape-ap88nyzt",
+      "project_slug": "blue-base-82730697",
+      "project_id": "blue-base-82730697",
+      "branch_id": "br-holy-shape-ap88nyzt",
+      "autoscaling_limit_min_cu": 0.25,
+      "autoscaling_limit_max_cu": 2,
+      "region_id": "aws-us-east-1",
+      "type": "read_write",
+      "current_state": "init",
+      "pending_state": "active",
+      "group": {
+        "size": {
+          "min": 1,
+          "max": 1
+        },
+        "allow_readable_secondaries": false,
+        "computes": [
+          {
+            "binding_id": "rvq",
+            "current_state": "init",
+            "pending_state": "active",
+            "role": "read_write",
+            "compute_host": "ep-old-grass-ap7fuq8i-rvq.c-7.us-east-1.aws.neon.tech",
+            "compute_pooled_host": "ep-old-grass-ap7fuq8i-rvq-pooler.c-7.us-east-1.aws.neon.tech",
+            "created_at": "2026-06-09T21:11:06Z",
+            "updated_at": "2026-06-09T21:11:06Z"
+          }
+        ]
+      },
+      "settings": {},
+      "pooler_enabled": false,
+      "pooler_mode": "transaction",
+      "disabled": false,
+      "passwordless_access": true,
+      "creation_source": "github",
+      "created_at": "2026-06-09T21:11:06Z",
+      "updated_at": "2026-06-09T21:11:06Z",
+      "proxy_host": "c-7.us-east-1.aws.neon.tech",
+      "suspend_timeout_seconds": 0,
+      "provisioner": "k8s-neonvm"
+    }
+  ],
+  "connection_uris": [
+    {
+      "connection_uri": "***ep-old-grass-ap7fuq8i.c-7.us-east-1.aws.neon.tech/neondb?sslmode=require",
+      "connection_parameters": {
+        "database": "neondb",
+        "password": "***",
+        "role": "neondb_owner",
+        "host": "ep-old-grass-ap7fuq8i.c-7.us-east-1.aws.neon.tech",
+        "pooler_host": "ep-old-grass-ap7fuq8i-pooler.c-7.us-east-1.aws.neon.tech"
+      }
+    }
+  ]
+}branch doesn't exist, branch id: br-holy-shape-ap88nyzt
+##[group]Run echo "::add-mask::$DATABASE_URL"
+[36;1mecho "::add-mask::$DATABASE_URL"[0m
+[36;1mecho "::add-mask::$DATABASE_URL_UNPOOLED"[0m
+shell: /usr/bin/bash -e {0}
+env:
+  NODE_VERSION: 24
+  PNPM_VERSION: 10.28.0
+  VERCEL_CLI_VERSION: 54.10.3
+  VERCEL_ORG_ID: ***
+  VERCEL_PROJECT_ID: ***
+  VERCEL_TOKEN: ***
+  NEON_PROJECT_ID: blue-base-82730697
+  PNPM_HOME: /home/runner/setup-pnpm/node_modules/.bin
+  DATABASE_URL: ***ep-old-grass-ap7fuq8i-pooler.c-7.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require
+  DATABASE_URL_UNPOOLED: ***ep-old-grass-ap7fuq8i.c-7.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require
+##[endgroup]
+##[group]Run set -euo pipefail
+[36;1mset -euo pipefail[0m
+[36;1m[0m
+[36;1mprintf '%s' "$DATABASE_URL" \[0m
+[36;1m  | pnpm dlx vercel@${VERCEL_CLI_VERSION} env add DATABASE_URL preview "$GIT_BRANCH" --force --yes[0m
+[36;1m[0m
+[36;1mprintf '%s' "$DATABASE_URL_UNPOOLED" \[0m
+[36;1m  | pnpm dlx vercel@${VERCEL_CLI_VERSION} env add DATABASE_URL_UNPOOLED preview "$GIT_BRANCH" --force --yes[0m
+shell: /usr/bin/bash -e {0}
+env:
+  NODE_VERSION: 24
+  PNPM_VERSION: 10.28.0
+  VERCEL_CLI_VERSION: 54.10.3
+  VERCEL_ORG_ID: ***
+  VERCEL_PROJECT_ID: ***
+  VERCEL_TOKEN: ***
+  NEON_PROJECT_ID: blue-base-82730697
+  PNPM_HOME: /home/runner/setup-pnpm/node_modules/.bin
+  GIT_BRANCH: ci-cd-2
+  DATABASE_URL: ***
+  DATABASE_URL_UNPOOLED: ***
+##[endgroup]
+Progress: resolved 1, reused 0, downloaded 0, added 0
+Progress: resolved 135, reused 4, downloaded 91, added 0
+Progress: resolved 314, reused 29, downloaded 201, added 0
+ WARN  1 deprecated subdependencies found: tar@7.5.7
+Packages: +319
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+Progress: resolved 386, reused 65, downloaded 256, added 319, done
+╭ Warning ─────────────────────────────────────────────────────────────────────╮
+│                                                                              │
+│   Ignored build scripts: esbuild@0.27.0.                                     │
+│   Run "pnpm approve-builds" to pick which dependencies should be allowed     │
+│   to run scripts.                                                            │
+│                                                                              │
+╰──────────────────────────────────────────────────────────────────────────────╯
+Vercel CLI 54.10.3 (Node.js 24.16.0)
+> NOTE: The Vercel CLI now collects telemetry regarding usage of the CLI.
+> This information is used to shape the CLI roadmap and prioritize features.
+> You can learn more, including how to opt-out if you'd not like to participate in this program, by visiting the following URL:
+> https://vercel.com/docs/cli/about-telemetry
+Retrieving project…
+Saving
+Overrode Environment Variable DATABASE_URL to Project cp-thing [597ms]
+Vercel CLI 54.10.3 (Node.js 24.16.0)
+Retrieving project…
+Saving
+Overrode Environment Variable DATABASE_URL_UNPOOLED to Project cp-thing [170ms]
+##[group]Run pnpm dlx vercel@${VERCEL_CLI_VERSION} pull --yes --environment=preview --git-branch="$GIT_BRANCH"
+[36;1mpnpm dlx vercel@${VERCEL_CLI_VERSION} pull --yes --environment=preview --git-branch="$GIT_BRANCH"[0m
+shell: /usr/bin/bash -e {0}
+env:
+  NODE_VERSION: 24
+  PNPM_VERSION: 10.28.0
+  VERCEL_CLI_VERSION: 54.10.3
+  VERCEL_ORG_ID: ***
+  VERCEL_PROJECT_ID: ***
+  VERCEL_TOKEN: ***
+  NEON_PROJECT_ID: blue-base-82730697
+  PNPM_HOME: /home/runner/setup-pnpm/node_modules/.bin
+  GIT_BRANCH: ci-cd-2
+##[endgroup]
+Vercel CLI 54.10.3 (Node.js 24.16.0)
+Retrieving project…
+> Downloading `preview` Environment Variables for john-munson-s-team/cp-thing and any overrides for branch ci-cd-2
+Downloading
+Created .vercel/.env.preview.local file  [143ms]
+
+> Downloading project settings
+Downloaded project settings to ~/work/cp-thing/cp-thing/.vercel/project.json [0ms]
+##[group]Run pnpm dlx vercel@${VERCEL_CLI_VERSION} env run --environment=preview --git-branch="$GIT_BRANCH" -- pnpm db:migrate
+[36;1mpnpm dlx vercel@${VERCEL_CLI_VERSION} env run --environment=preview --git-branch="$GIT_BRANCH" -- pnpm db:migrate[0m
+shell: /usr/bin/bash -e {0}
+env:
+  NODE_VERSION: 24
+  PNPM_VERSION: 10.28.0
+  VERCEL_CLI_VERSION: 54.10.3
+  VERCEL_ORG_ID: ***
+  VERCEL_PROJECT_ID: ***
+  VERCEL_TOKEN: ***
+  NEON_PROJECT_ID: blue-base-82730697
+  PNPM_HOME: /home/runner/setup-pnpm/node_modules/.bin
+  GIT_BRANCH: ci-cd-2
+##[endgroup]
+Vercel CLI 54.10.3 (Node.js 24.16.0)
+Retrieving project…
+Downloading `preview` Environment Variables
+
+> cp-thing@0.1.0 db:migrate /home/runner/work/cp-thing/cp-thing
+> node scripts/db/migrate.mjs
+
+[db:migrate] No database configured yet; skipping migrations for preview.
+##[group]Run pnpm dlx vercel@${VERCEL_CLI_VERSION} build --target=preview --yes
+[36;1mpnpm dlx vercel@${VERCEL_CLI_VERSION} build --target=preview --yes[0m
+shell: /usr/bin/bash -e {0}
+env:
+  NODE_VERSION: 24
+  PNPM_VERSION: 10.28.0
+  VERCEL_CLI_VERSION: 54.10.3
+  VERCEL_ORG_ID: ***
+  VERCEL_PROJECT_ID: ***
+  VERCEL_TOKEN: ***
+  NEON_PROJECT_ID: blue-base-82730697
+  PNPM_HOME: /home/runner/setup-pnpm/node_modules/.bin
+  DATABASE_URL: ***
+  DATABASE_URL_UNPOOLED: ***
+##[endgroup]
+Vercel CLI 54.10.3 (Node.js 24.16.0)
+WARNING! Build not running on Vercel. System environment variables will not be available.
+Detected `pnpm-lock.yaml` 9 which may be generated by pnpm@9.x or pnpm@10.x
+Using pnpm@10.x based on project creation date
+To use pnpm@9.x, manually opt in using corepack (https://vercel.com/docs/deployments/configure-a-build#corepack)
+Installing dependencies...
+Lockfile is up to date, resolution step is skipped
+Already up to date
+
+Done in 628ms using pnpm v10.28.0
+Detected Next.js version: 16.2.7
+Running "pnpm run build"
+
+> cp-thing@0.1.0 build /home/runner/work/cp-thing/cp-thing
+> next build
+
+Attention: Next.js now collects completely anonymous telemetry regarding usage.
+This information is used to shape Next.js' roadmap and prioritize features.
+You can learn more, including how to opt-out if you'd not like to participate in this anonymous program, by visiting the following URL:
+https://nextjs.org/telemetry
+
+▲ Next.js 16.2.7 (Turbopack)
+
+  Creating an optimized production build ...
+✓ Compiled successfully in 2.3s
+  Running TypeScript ...
+  Finished TypeScript in 2.4s ...
+  Collecting page data using 3 workers ...
+  Generating static pages using 3 workers (0/4) ...
+  Generating static pages using 3 workers (1/4) 
+  Generating static pages using 3 workers (2/4) 
+  Generating static pages using 3 workers (3/4) 
+✓ Generating static pages using 3 workers (4/4) in 148ms
+  Finalizing page optimization ...
+
+Route (app)
+┌ ○ /
+└ ○ /_not-found
+
+
+○  (Static)  prerendered as static content
+
+Traced Next.js server files in: 30.845ms
+Created all serverless functions in: 112.455ms
+Collected static files (public/, static/, .next/static): 3.489ms
+Build Completed in .vercel/output [8s]
+##[group]Run set -euo pipefail
+[36;1mset -euo pipefail[0m
+[36;1m[0m
+[36;1mdeployment_url="$(pnpm dlx vercel@${VERCEL_CLI_VERSION} deploy \[0m
+[36;1m  --prebuilt \[0m
+[36;1m  --target=preview \[0m
+[36;1m  --yes \[0m
+[36;1m  --env DATABASE_URL="$DATABASE_URL" \[0m
+[36;1m  --env DATABASE_URL_UNPOOLED="$DATABASE_URL_UNPOOLED" \[0m
+[36;1m  --meta githubCommitSha="$HEAD_SHA" \[0m
+[36;1m  --meta githubCommitRef="$GIT_BRANCH")"[0m
+[36;1m[0m
+[36;1mecho "url=$deployment_url" >> "$GITHUB_OUTPUT"[0m
+[36;1m{[0m
+[36;1m  echo "### Preview deployment"[0m
+[36;1m  echo "- URL: $deployment_url"[0m
+[36;1m  echo "- Git branch: $GIT_BRANCH"[0m
+[36;1m  echo "- Neon branch: preview/ci-cd-2-11109bc4"[0m
+[36;1m} >> "$GITHUB_STEP_SUMMARY"[0m
+shell: /usr/bin/bash -e {0}
+env:
+  NODE_VERSION: 24
+  PNPM_VERSION: 10.28.0
+  VERCEL_CLI_VERSION: 54.10.3
+  VERCEL_ORG_ID: ***
+  VERCEL_PROJECT_ID: ***
+  VERCEL_TOKEN: ***
+  NEON_PROJECT_ID: blue-base-82730697
+  PNPM_HOME: /home/runner/setup-pnpm/node_modules/.bin
+  GIT_BRANCH: ci-cd-2
+  HEAD_SHA: f840fb1cb6c481d21239ba45230758ccbe0a552b
+  DATABASE_URL: ***
+  DATABASE_URL_UNPOOLED: ***
+##[endgroup]
+Vercel CLI 54.10.3 (Node.js 24.16.0)
+Retrieving project…
+Deploying john-munson-s-team/cp-thing
+Uploading [--------------------] (0.0B/348.2KB)
+Uploading [=====---------------] (94.0KB/348.2KB)
+Uploading [==========----------] (177.3KB/348.2KB)
+Uploading [===============-----] (262.0KB/348.2KB)
+Uploading [====================] (348.2KB/348.2KB)
+  Inspect     https://vercel.com/john-munson-s-team/cp-thing/JDb9ZABF2mXHQ6AeTUgKzEU4njGW
+  Preview     https://cp-thing-klys39vyh-john-munson-s-team.vercel.app
+Building…
+Building…
+Running build in Washington, D.C., USA (East) – iad1
+Build machine configuration: 4 cores, 8 GB
+Retrieving list of deployment files...
+Downloading 304 deployment files...
+Using prebuilt build artifacts from .vercel/output
+Learn more: https://vercel.link/build-output-api
+Deploying outputs...
+[2K[1A[2K[G  Preview     https://cp-thing-klys39vyh-john-munson-s-team.vercel.app
+Completing…
+
+✓ Ready in 10s
+To deploy to production (cp-thing.vercel.app), run `vercel --prod`
+##[group]Run set -euo pipefail
+[36;1mset -euo pipefail[0m
+[36;1m[0m
+[36;1mif [ -n "$EVENT_PR_NUMBER" ]; then[0m
+[36;1m  pr_number="$EVENT_PR_NUMBER"[0m
+[36;1melse[0m
+[36;1m  pr_number="$(gh pr list --head "$GIT_BRANCH" --state open --json number --jq '.[0].number // empty')"[0m
+[36;1mfi[0m
+[36;1m[0m
+[36;1mecho "number=$pr_number" >> "$GITHUB_OUTPUT"[0m
+shell: /usr/bin/bash -e {0}
+env:
+  NODE_VERSION: 24
+  PNPM_VERSION: 10.28.0
+  VERCEL_CLI_VERSION: 54.10.3
+  VERCEL_ORG_ID: ***
+  VERCEL_PROJECT_ID: ***
+  VERCEL_TOKEN: ***
+  NEON_PROJECT_ID: blue-base-82730697
+  PNPM_HOME: /home/runner/setup-pnpm/node_modules/.bin
+  GH_TOKEN: ***
+  GIT_BRANCH: ci-cd-2
+  EVENT_PR_NUMBER: 
+##[endgroup]
+##[warning]Unexpected input(s) 'role', valid inputs are ['project_id', 'branch_name', 'api_key', 'api_host', 'username', 'database', 'prisma', 'parent', 'suspend_timeout', 'ssl']
+Post job cleanup.
+Post job cleanup.
+Post job cleanup.
+Cache hit occurred on the primary key node-cache-Linux-x64-pnpm-79f8f474ad5625688d33e586d9fe5de0b3305b93e9b72aef2fe4ec4f00efc678, not saving cache.
+Post job cleanup.
+Pruning is unnecessary.
+Post job cleanup.
+[command]/usr/bin/git version
+git version 2.54.0
+Temporarily overriding HOME='/home/runner/work/_temp/5c6527a3-b53d-49be-9eae-1c5b60c61252' before making global git config changes
+Adding repository directory to the temporary git global config as a safe directory
+[command]/usr/bin/git config --global --add safe.directory /home/runner/work/cp-thing/cp-thing
+[command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+[command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+[command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+http.https://github.com/.extraheader
+[command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+[command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+[command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+[command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+Cleaning up orphan processes
+##[warning]Node.js 20 actions are deprecated. The following actions are running on Node.js 20 and may not work as expected: actions/checkout@v4, actions/setup-node@v4, pnpm/action-setup@v4. Actions will be forced to run with Node.js 24 by default starting June 16th, 2026. Node.js 20 will be removed from the runner on September 16th, 2026. Please check if updated versions of these actions are available that support Node.js 24. To opt into Node.js 24 now, set the FORCE_JAVASCRIPT_ACTIONS_TO_NODE24=true environment variable on the runner or in your workflow file. Once Node.js 24 becomes the default, you can temporarily opt out by setting ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
