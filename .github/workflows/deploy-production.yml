@@ -1,0 +1,66 @@
+name: Deploy Production
+
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+env:
+  NODE_VERSION: 24
+  PNPM_VERSION: 10.28.0
+  VERCEL_CLI_VERSION: 54.10.3
+  VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+  VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+  VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+
+jobs:
+  deploy-production:
+    name: Deploy Production
+    if: ${{ github.event_name == 'workflow_dispatch' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push' && github.event.workflow_run.head_branch == 'main') }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Pull Vercel production environment
+        run: pnpm dlx vercel@${VERCEL_CLI_VERSION} pull --yes --environment=production
+
+      - name: Build Vercel production artifacts
+        run: pnpm dlx vercel@${VERCEL_CLI_VERSION} build --prod --yes
+
+      - name: Run production database migrations
+        run: pnpm dlx vercel@${VERCEL_CLI_VERSION} env run --environment=production -- pnpm db:migrate
+
+      - name: Deploy Vercel production
+        id: deploy
+        run: |
+          set -euo pipefail
+
+          deployment_url="$(pnpm dlx vercel@${VERCEL_CLI_VERSION} deploy --prebuilt --prod --yes)"
+          echo "url=$deployment_url" >> "$GITHUB_OUTPUT"
+          {
+            echo "### Production deployment"
+            echo "- URL: $deployment_url"
+            echo "- Commit: ${{ github.event.workflow_run.head_sha || github.sha }}"
+          } >> "$GITHUB_STEP_SUMMARY"

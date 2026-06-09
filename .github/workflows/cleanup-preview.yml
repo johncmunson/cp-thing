@@ -1,0 +1,112 @@
+name: Cleanup Preview
+
+on:
+  delete:
+  pull_request:
+    types: [closed]
+  workflow_dispatch:
+    inputs:
+      git_branch:
+        description: Git branch name whose preview resources should be removed
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cleanup-preview-${{ github.event.ref || github.event.pull_request.head.ref || inputs.git_branch }}
+  cancel-in-progress: false
+
+env:
+  NODE_VERSION: 24
+  PNPM_VERSION: 10.28.0
+  VERCEL_CLI_VERSION: 54.10.3
+  VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+  VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+  VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+  NEON_PROJECT_ID: ${{ vars.NEON_PROJECT_ID || secrets.NEON_PROJECT_ID }}
+
+jobs:
+  cleanup-preview:
+    name: Cleanup Preview
+    if: ${{ github.event_name == 'workflow_dispatch' || (github.event_name == 'delete' && github.event.ref_type == 'branch' && github.event.ref != 'main') || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.head.ref != 'main') }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - name: Compute preview names
+        id: preview
+        env:
+          DELETE_REF: ${{ github.event.ref }}
+          DELETE_REF_TYPE: ${{ github.event.ref_type }}
+          PR_HEAD_REF: ${{ github.event.pull_request.head.ref }}
+          DISPATCH_REF: ${{ inputs.git_branch }}
+        run: |
+          set -euo pipefail
+
+          case "$GITHUB_EVENT_NAME" in
+            delete)
+              if [ "$DELETE_REF_TYPE" != "branch" ]; then
+                echo "Not a branch delete event; skipping."
+                exit 0
+              fi
+              git_branch="$DELETE_REF"
+              ;;
+            pull_request)
+              git_branch="$PR_HEAD_REF"
+              ;;
+            workflow_dispatch)
+              git_branch="$DISPATCH_REF"
+              ;;
+            *)
+              echo "Unsupported event: $GITHUB_EVENT_NAME" >&2
+              exit 1
+              ;;
+          esac
+
+          branch_slug="$(printf '%s' "$git_branch" | tr '[:upper:]' '[:lower:]' | sed -E 's/[^a-z0-9]+/-/g; s/^-+//; s/-+$//; s/-+/-/g' | cut -c1-48)"
+          if [ -z "$branch_slug" ]; then
+            branch_slug="branch"
+          fi
+
+          branch_hash="$(printf '%s' "$git_branch" | sha1sum | cut -c1-8)"
+          neon_branch="preview/${branch_slug}-${branch_hash}"
+
+          echo "git_branch=$git_branch" >> "$GITHUB_OUTPUT"
+          echo "neon_branch=$neon_branch" >> "$GITHUB_OUTPUT"
+
+      - name: Remove Vercel branch-specific database env vars
+        env:
+          GIT_BRANCH: ${{ steps.preview.outputs.git_branch }}
+        run: |
+          set -euo pipefail
+
+          pnpm dlx vercel@${VERCEL_CLI_VERSION} env rm DATABASE_URL preview "$GIT_BRANCH" --yes || true
+          pnpm dlx vercel@${VERCEL_CLI_VERSION} env rm DATABASE_URL_UNPOOLED preview "$GIT_BRANCH" --yes || true
+
+      - name: Delete Neon preview branch
+        uses: neondatabase/delete-branch-action@v3
+        continue-on-error: true
+        with:
+          project_id: ${{ env.NEON_PROJECT_ID }}
+          branch: ${{ steps.preview.outputs.neon_branch }}
+          api_key: ${{ secrets.NEON_API_KEY }}
+
+      - name: Write cleanup summary
+        run: |
+          {
+            echo "### Preview cleanup"
+            echo "- Git branch: ${{ steps.preview.outputs.git_branch }}"
+            echo "- Neon branch: ${{ steps.preview.outputs.neon_branch }}"
+          } >> "$GITHUB_STEP_SUMMARY"
