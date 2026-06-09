@@ -1,11 +1,9 @@
 name: Deploy Preview
 
 on:
-  push:
-    branches-ignore:
-      - main
-  pull_request:
-    types: [opened, reopened]
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
   workflow_dispatch:
 
 permissions:
@@ -14,7 +12,7 @@ permissions:
   pull-requests: read
 
 concurrency:
-  group: deploy-preview-${{ github.head_ref || github.ref_name }}
+  group: deploy-preview-${{ github.event.workflow_run.head_branch || github.ref_name }}
   cancel-in-progress: true
 
 env:
@@ -30,13 +28,13 @@ env:
 jobs:
   deploy-preview:
     name: Deploy Preview
-    if: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && (github.head_ref || github.ref_name) != 'main' }}
+    if: ${{ (github.event_name == 'workflow_dispatch' && github.ref_name != 'main') || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push' && github.event.workflow_run.head_branch != 'main') }}
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
 
       - uses: pnpm/action-setup@v4
         with:
@@ -52,8 +50,8 @@ jobs:
       - name: Compute preview names
         id: preview
         env:
-          GIT_BRANCH: ${{ github.head_ref || github.ref_name }}
-          HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+          GIT_BRANCH: ${{ github.event.workflow_run.head_branch || github.ref_name }}
+          HEAD_SHA: ${{ github.event.workflow_run.head_sha || github.sha }}
         run: |
           set -euo pipefail
 
@@ -151,15 +149,10 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           GIT_BRANCH: ${{ steps.preview.outputs.git_branch }}
-          EVENT_PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
           set -euo pipefail
 
-          if [ -n "$EVENT_PR_NUMBER" ]; then
-            pr_number="$EVENT_PR_NUMBER"
-          else
-            pr_number="$(gh pr list --head "$GIT_BRANCH" --state open --json number --jq '.[0].number // empty')"
-          fi
+          pr_number="$(gh pr list --head "$GIT_BRANCH" --state open --json number --jq '.[0].number // empty')"
 
           echo "number=$pr_number" >> "$GITHUB_OUTPUT"
 
