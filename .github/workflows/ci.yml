@@ -28,7 +28,7 @@ jobs:
 
       - name: Detect CI file changes
         id: ci_files
-        uses: dorny/paths-filter@v3
+        uses: dorny/paths-filter@v4
         with:
           filters: |
             ci:
