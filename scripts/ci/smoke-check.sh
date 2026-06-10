@@ -23,7 +23,16 @@ if [ -n "${VERCEL_AUTOMATION_BYPASS_SECRET:-}" ]; then
   curl_args+=(--header "x-vercel-protection-bypass: ${VERCEL_AUTOMATION_BYPASS_SECRET}")
 fi
 
-status="$(curl "${curl_args[@]}" "$DEPLOYMENT_URL" || true)"
+set +e
+status="$(curl "${curl_args[@]}" "$DEPLOYMENT_URL")"
+curl_exit=$?
+set -e
+
+if [ "$curl_exit" -ne 0 ]; then
+  echo "Smoke check failed: curl exited with $curl_exit after HTTP ${status:-000}." >&2
+  tail -c 2000 "$tmp_body" >&2 || true
+  exit "$curl_exit"
+fi
 
 case "$status" in
   2*|3*)
