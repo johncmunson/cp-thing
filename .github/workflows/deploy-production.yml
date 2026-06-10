@@ -14,8 +14,6 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  NODE_VERSION: 24
-  PNPM_VERSION: 10.28.0
   NEXT_TELEMETRY_DISABLED: "1"
   VERCEL_TELEMETRY_DISABLED: "1"
   VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
@@ -24,11 +22,45 @@ env:
   VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
 
 jobs:
-  deploy-production:
-    name: Deploy Production
+  verify-main:
+    name: Verify Main Head
     if: ${{ github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push' && github.event.workflow_run.head_branch == 'main' }}
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    outputs:
+      should_deploy: ${{ steps.current.outputs.should_deploy }}
+
+    steps:
+      - name: Confirm workflow commit is still main
+        id: current
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EXPECTED_SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          set -euo pipefail
+
+          current_sha="$(gh api "repos/${GITHUB_REPOSITORY}/git/ref/heads/main" --jq '.object.sha')"
+
+          if [ "$current_sha" = "$EXPECTED_SHA" ]; then
+            echo "should_deploy=true" >> "$GITHUB_OUTPUT"
+            echo "Main still points at $EXPECTED_SHA; continuing."
+          else
+            echo "should_deploy=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::Skipping production deploy because main moved from $EXPECTED_SHA to $current_sha."
+            {
+              echo "### Production deployment skipped"
+              echo "- Reason: CI completed for a commit that is no longer the tip of main."
+              echo "- Workflow SHA: $EXPECTED_SHA"
+              echo "- Current main SHA: $current_sha"
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+  deploy-production:
+    name: Deploy Production
+    needs: verify-main
+    if: ${{ needs.verify-main.outputs.should_deploy == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
     environment:
       name: production
       url: ${{ steps.deploy.outputs.url }}
@@ -36,18 +68,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+          ref: ${{ github.event.workflow_run.head_sha }}
 
-      - uses: pnpm/action-setup@v4
-        with:
-          version: ${{ env.PNPM_VERSION }}
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: pnpm
-
-      - run: pnpm install --frozen-lockfile
+      - uses: ./.github/actions/setup-node-pnpm
 
       - name: Pull Vercel production environment
         run: pnpm exec vercel pull --yes --environment=production
@@ -58,13 +81,21 @@ jobs:
       - name: Run production database migrations
         run: pnpm exec vercel env run --environment=production -- pnpm db:migrate
 
-      - name: Deploy Vercel production
+      - name: Create unaliased production deployment
         id: deploy
         run: |
           set -euo pipefail
 
-          deployment_output="$(pnpm exec vercel deploy --prebuilt --prod --yes)"
-          deployment_url="$(printf '%s\n' "$deployment_output" | grep -Eo 'https://[^[:space:]]+' | tail -n1 || true)"
+          if ! deployment_output="$(pnpm exec vercel deploy --prebuilt --prod --skip-domain --yes --format=json)"; then
+            printf '%s\n' "$deployment_output"
+            exit 1
+          fi
+
+          if ! deployment_url="$(printf '%s\n' "$deployment_output" | jq -r '.url // .deployment.url // empty')"; then
+            printf '%s\n' "$deployment_output"
+            echo "Unable to parse deployment JSON output." >&2
+            exit 1
+          fi
 
           if [ -z "$deployment_url" ]; then
             printf '%s\n' "$deployment_output"
@@ -76,10 +107,21 @@ jobs:
           {
             echo "### Production deployment"
             echo "- URL: $deployment_url"
-            echo "- Commit: ${{ github.event.workflow_run.head_sha || github.sha }}"
+            echo "- Commit: ${{ github.event.workflow_run.head_sha }}"
+            echo "- Promotion: pending smoke check"
           } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Smoke check production deployment
         env:
           DEPLOYMENT_URL: ${{ steps.deploy.outputs.url }}
         run: bash scripts/ci/smoke-check.sh
+
+      - name: Promote production deployment
+        run: |
+          set -euo pipefail
+
+          pnpm exec vercel promote "${{ steps.deploy.outputs.url }}" --yes
+          {
+            echo "### Production promotion"
+            echo "- Promoted: ${{ steps.deploy.outputs.url }}"
+          } >> "$GITHUB_STEP_SUMMARY"

@@ -8,4 +8,5 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 - Always prefer `pnpm` and/or `pnpx` over any other package manager such as `npm` or `yarn`
 - Test logic, services, hooks, etc. Avoid writing pedantic frontend tests such as "the button is blue".
+- Production migrations run before the new Vercel deployment is promoted, so keep them backward-compatible with the currently live app (expand/contract; do not drop or rename in the same deploy).
 - Don't forget: deleting code is a virtue

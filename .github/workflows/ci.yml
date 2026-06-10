@@ -18,49 +18,28 @@ env:
   VERCEL_TELEMETRY_DISABLED: "1"
 
 jobs:
-  lint:
+  checks:
+    name: Checks
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 10.28.0
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 24
-          cache: pnpm
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm lint
 
-  typecheck:
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 10.28.0
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 24
-          cache: pnpm
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm typecheck
+      - uses: rhysd/actionlint@v1
 
-  test:
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 10.28.0
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 24
-          cache: pnpm
-      - run: pnpm install --frozen-lockfile
+      - name: ShellCheck
+        run: shellcheck scripts/ci/*.sh
+
+      - uses: ./.github/actions/setup-node-pnpm
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Build
+        run: pnpm build
 
       - name: Get Playwright version
         id: playwright-version
@@ -72,20 +51,8 @@ jobs:
           path: ~/.cache/ms-playwright
           key: ${{ runner.os }}-playwright-chromium-${{ steps.playwright-version.outputs.version }}
 
-      - run: pnpm exec playwright install --with-deps chromium
-      - run: pnpm test
+      - name: Install Playwright Chromium
+        run: pnpm exec playwright install --with-deps chromium
 
-  build:
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 10.28.0
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 24
-          cache: pnpm
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm build
+      - name: Test
+        run: pnpm test
