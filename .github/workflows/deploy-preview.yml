@@ -5,7 +5,6 @@ on:
     workflows: [CI]
     types: [completed]
     branches-ignore: [main]
-  workflow_dispatch:
 
 permissions:
   contents: read
@@ -13,7 +12,7 @@ permissions:
   pull-requests: write
 
 concurrency:
-  group: deploy-preview-${{ github.event.workflow_run.head_branch || github.ref_name }}
+  group: deploy-preview-${{ github.event.workflow_run.pull_requests[0].number || github.event.workflow_run.head_branch || github.run_id }}
   cancel-in-progress: true
 
 env:
@@ -30,14 +29,14 @@ env:
 jobs:
   deploy-preview:
     name: Deploy Preview
-    if: ${{ (github.event_name == 'workflow_dispatch' && github.ref_name != 'main') || (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch != 'main' && github.event.workflow_run.head_repository.full_name == github.repository && (github.event.workflow_run.event == 'push' || github.event.workflow_run.event == 'pull_request')) }}
+    if: ${{ github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'pull_request' && github.event.workflow_run.head_branch != 'main' && github.event.workflow_run.head_repository.full_name == github.repository }}
     runs-on: ubuntu-latest
     timeout-minutes: 5
 
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+          ref: ${{ github.event.workflow_run.pull_requests[0].head.sha || github.event.workflow_run.head_sha }}
 
       - uses: pnpm/action-setup@v4
         with:
@@ -53,22 +52,32 @@ jobs:
       - name: Compute preview names
         id: preview
         env:
-          GIT_BRANCH: ${{ github.event.workflow_run.head_branch || github.ref_name }}
-          HEAD_SHA: ${{ github.event.workflow_run.head_sha || github.sha }}
+          PR_HEAD_BRANCH: ${{ github.event.workflow_run.pull_requests[0].head.ref }}
+          PR_HEAD_SHA: ${{ github.event.workflow_run.pull_requests[0].head.sha }}
+          WORKFLOW_HEAD_BRANCH: ${{ github.event.workflow_run.head_branch }}
+          WORKFLOW_HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
         run: |
           set -euo pipefail
 
-          branch_slug="$(printf '%s' "$GIT_BRANCH" | tr '[:upper:]' '[:lower:]' | sed -E 's/[^a-z0-9]+/-/g; s/^-+//; s/-+$//; s/-+/-/g' | cut -c1-48)"
+          git_branch="${PR_HEAD_BRANCH:-$WORKFLOW_HEAD_BRANCH}"
+          head_sha="${PR_HEAD_SHA:-$WORKFLOW_HEAD_SHA}"
+
+          if [ -z "$git_branch" ] || [ -z "$head_sha" ]; then
+            echo "Unable to determine PR head branch/SHA from CI workflow_run payload." >&2
+            exit 1
+          fi
+
+          branch_slug="$(printf '%s' "$git_branch" | tr '[:upper:]' '[:lower:]' | sed -E 's/[^a-z0-9]+/-/g; s/^-+//; s/-+$//; s/-+/-/g' | cut -c1-48)"
           if [ -z "$branch_slug" ]; then
             branch_slug="branch"
           fi
 
-          branch_hash="$(printf '%s' "$GIT_BRANCH" | sha1sum | cut -c1-8)"
+          branch_hash="$(printf '%s' "$git_branch" | sha1sum | cut -c1-8)"
           neon_branch="preview/${branch_slug}-${branch_hash}"
-          sha_short="${HEAD_SHA:0:7}"
+          sha_short="${head_sha:0:7}"
 
-          echo "git_branch=$GIT_BRANCH" >> "$GITHUB_OUTPUT"
-          echo "head_sha=$HEAD_SHA" >> "$GITHUB_OUTPUT"
+          echo "git_branch=$git_branch" >> "$GITHUB_OUTPUT"
+          echo "head_sha=$head_sha" >> "$GITHUB_OUTPUT"
           echo "sha_short=$sha_short" >> "$GITHUB_OUTPUT"
           echo "neon_branch=$neon_branch" >> "$GITHUB_OUTPUT"
 

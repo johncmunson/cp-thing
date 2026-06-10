@@ -5,7 +5,6 @@ on:
     workflows: [CI]
     types: [completed]
     branches: [main]
-  workflow_dispatch:
 
 permissions:
   contents: read
@@ -27,7 +26,7 @@ env:
 jobs:
   deploy-production:
     name: Deploy Production
-    if: ${{ (github.event_name == 'workflow_dispatch' && github.ref_name == 'main') || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push' && github.event.workflow_run.head_branch == 'main') }}
+    if: ${{ github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push' && github.event.workflow_run.head_branch == 'main' }}
     runs-on: ubuntu-latest
     timeout-minutes: 5
     environment:
