@@ -199,6 +199,7 @@ jobs:
             --prebuilt \
             --target=preview \
             --yes \
+            --no-wait \
             --format=json \
             --env DATABASE_URL="$DATABASE_URL" \
             --env DATABASE_URL_UNPOOLED="$DATABASE_URL_UNPOOLED" \
@@ -226,7 +227,17 @@ jobs:
             echo "- URL: $deployment_url"
             echo "- Git branch: $GIT_BRANCH"
             echo "- Neon branch: ${{ steps.preview.outputs.neon_branch }}"
+            echo "- Readiness: pending"
           } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Wait for Vercel preview deployment
+        if: ${{ steps.pr.outputs.should_deploy == 'true' }}
+        env:
+          DEPLOYMENT_URL: ${{ steps.deploy.outputs.url }}
+        run: |
+          set -euo pipefail
+
+          pnpm exec vercel inspect "$DEPLOYMENT_URL" --wait --timeout 10m --logs
 
       - name: Smoke check preview deployment
         if: ${{ steps.pr.outputs.should_deploy == 'true' }}

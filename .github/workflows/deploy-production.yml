@@ -86,7 +86,7 @@ jobs:
         run: |
           set -euo pipefail
 
-          if ! deployment_output="$(pnpm exec vercel deploy --prebuilt --prod --skip-domain --yes --format=json)"; then
+          if ! deployment_output="$(pnpm exec vercel deploy --prebuilt --prod --skip-domain --yes --no-wait --format=json)"; then
             printf '%s\n' "$deployment_output"
             exit 1
           fi
@@ -110,6 +110,14 @@ jobs:
             echo "- Commit: ${{ github.event.workflow_run.head_sha }}"
             echo "- Promotion: pending smoke check"
           } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Wait for Vercel production deployment
+        env:
+          DEPLOYMENT_URL: ${{ steps.deploy.outputs.url }}
+        run: |
+          set -euo pipefail
+
+          pnpm exec vercel inspect "$DEPLOYMENT_URL" --wait --timeout 10m --logs
 
       - name: Smoke check production deployment
         env:
