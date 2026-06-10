@@ -1,0 +1,28 @@
+name: Setup Node and pnpm
+description: Install the repository's packageManager pnpm version, configure Node.js with pnpm caching, and optionally run a frozen-lockfile install.
+
+inputs:
+  node-version-file:
+    description: File containing the Node.js version range to install.
+    required: false
+    default: package.json
+  install:
+    description: Run pnpm install --frozen-lockfile.
+    required: false
+    default: "true"
+
+runs:
+  using: composite
+  steps:
+    - uses: pnpm/action-setup@v4
+
+    - uses: actions/setup-node@v4
+      with:
+        node-version-file: ${{ inputs.node-version-file }}
+        cache: pnpm
+        cache-dependency-path: pnpm-lock.yaml
+
+    - name: Install dependencies
+      if: ${{ inputs.install == 'true' }}
+      shell: bash
+      run: pnpm install --frozen-lockfile

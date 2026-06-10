@@ -15,12 +15,10 @@ permissions:
   contents: read
 
 concurrency:
-  group: cleanup-preview-${{ github.event.ref || github.event.pull_request.head.ref || inputs.git_branch }}
+  group: cleanup-preview-${{ github.event_name == 'workflow_dispatch' && inputs.git_branch || github.event.pull_request.head.ref || github.event.ref || github.run_id }}
   cancel-in-progress: false
 
 env:
-  NODE_VERSION: 24
-  PNPM_VERSION: 10.28.0
   NEXT_TELEMETRY_DISABLED: "1"
   VERCEL_TELEMETRY_DISABLED: "1"
   VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
@@ -33,21 +31,11 @@ jobs:
     name: Cleanup Preview
     if: ${{ github.event_name == 'workflow_dispatch' || (github.event_name == 'delete' && github.event.ref_type == 'branch' && github.event.ref != 'main') || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.head.ref != 'main') }}
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 10
 
     steps:
       - uses: actions/checkout@v4
-
-      - uses: pnpm/action-setup@v4
-        with:
-          version: ${{ env.PNPM_VERSION }}
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: pnpm
-
-      - run: pnpm install --frozen-lockfile
+      - uses: ./.github/actions/setup-node-pnpm
 
       - name: Compute preview names
         id: preview
@@ -56,42 +44,11 @@ jobs:
           DELETE_REF_TYPE: ${{ github.event.ref_type }}
           PR_HEAD_REF: ${{ github.event.pull_request.head.ref }}
           DISPATCH_REF: ${{ inputs.git_branch }}
-        run: |
-          set -euo pipefail
-
-          case "$GITHUB_EVENT_NAME" in
-            delete)
-              if [ "$DELETE_REF_TYPE" != "branch" ]; then
-                echo "Not a branch delete event; skipping."
-                exit 0
-              fi
-              git_branch="$DELETE_REF"
-              ;;
-            pull_request)
-              git_branch="$PR_HEAD_REF"
-              ;;
-            workflow_dispatch)
-              git_branch="$DISPATCH_REF"
-              ;;
-            *)
-              echo "Unsupported event: $GITHUB_EVENT_NAME" >&2
-              exit 1
-              ;;
-          esac
-
-          branch_slug="$(printf '%s' "$git_branch" | tr '[:upper:]' '[:lower:]' | sed -E 's/[^a-z0-9]+/-/g; s/^-+//; s/-+$//; s/-+/-/g' | cut -c1-48)"
-          if [ -z "$branch_slug" ]; then
-            branch_slug="branch"
-          fi
-
-          branch_hash="$(printf '%s' "$git_branch" | sha1sum | cut -c1-8)"
-          neon_branch="preview/${branch_slug}-${branch_hash}"
-
-          echo "git_branch=$git_branch" >> "$GITHUB_OUTPUT"
-          echo "neon_branch=$neon_branch" >> "$GITHUB_OUTPUT"
+        run: bash scripts/ci/preview-names.sh
 
       - name: Remove Vercel preview deployments
         id: vercel_deployments
+        continue-on-error: true
         env:
           GIT_BRANCH: ${{ steps.preview.outputs.git_branch }}
         run: |
@@ -145,15 +102,6 @@ jobs:
           echo "removed_count=$removed_count" >> "$GITHUB_OUTPUT"
           echo "failed_count=$failed_count" >> "$GITHUB_OUTPUT"
 
-      - name: Remove Vercel branch-specific database env vars
-        env:
-          GIT_BRANCH: ${{ steps.preview.outputs.git_branch }}
-        run: |
-          set -euo pipefail
-
-          pnpm exec vercel env rm DATABASE_URL preview "$GIT_BRANCH" --yes || true
-          pnpm exec vercel env rm DATABASE_URL_UNPOOLED preview "$GIT_BRANCH" --yes || true
-
       - name: Delete Neon preview branch
         uses: neondatabase/delete-branch-action@v3
         continue-on-error: true
@@ -167,7 +115,7 @@ jobs:
           {
             echo "### Preview cleanup"
             echo "- Git branch: ${{ steps.preview.outputs.git_branch }}"
-            echo "- Vercel preview deployments removed: ${{ steps.vercel_deployments.outputs.removed_count }}"
-            echo "- Vercel preview deployment removal failures: ${{ steps.vercel_deployments.outputs.failed_count }}"
+            echo "- Vercel preview deployments removed: ${{ steps.vercel_deployments.outputs.removed_count || 'unknown' }}"
+            echo "- Vercel preview deployment removal failures: ${{ steps.vercel_deployments.outputs.failed_count || 'unknown' }}"
             echo "- Neon branch: ${{ steps.preview.outputs.neon_branch }}"
           } >> "$GITHUB_STEP_SUMMARY"
