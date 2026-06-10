@@ -33,6 +33,7 @@ jobs:
     name: Cleanup Preview
     if: ${{ github.event_name == 'workflow_dispatch' || (github.event_name == 'delete' && github.event.ref_type == 'branch' && github.event.ref != 'main') || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.head.ref != 'main') }}
     runs-on: ubuntu-latest
+    timeout-minutes: 5
 
     steps:
       - uses: actions/checkout@v4
