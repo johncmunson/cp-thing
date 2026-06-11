@@ -31,29 +31,16 @@ jobs:
       should_deploy: ${{ steps.current.outputs.should_deploy }}
 
     steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.workflow_sha }}
+
       - name: Confirm workflow commit is still main
         id: current
         env:
           GH_TOKEN: ${{ github.token }}
           EXPECTED_SHA: ${{ github.event.workflow_run.head_sha }}
-        run: |
-          set -euo pipefail
-
-          current_sha="$(gh api "repos/${GITHUB_REPOSITORY}/git/ref/heads/main" --jq '.object.sha')"
-
-          if [ "$current_sha" = "$EXPECTED_SHA" ]; then
-            echo "should_deploy=true" >> "$GITHUB_OUTPUT"
-            echo "Main still points at $EXPECTED_SHA; continuing."
-          else
-            echo "should_deploy=false" >> "$GITHUB_OUTPUT"
-            echo "::notice::Skipping production deploy because main moved from $EXPECTED_SHA to $current_sha."
-            {
-              echo "### Production deployment skipped"
-              echo "- Reason: CI completed for a commit that is no longer the tip of main."
-              echo "- Workflow SHA: $EXPECTED_SHA"
-              echo "- Current main SHA: $current_sha"
-            } >> "$GITHUB_STEP_SUMMARY"
-          fi
+        run: bash scripts/ci/verify-main-head.sh
 
   deploy-production:
     name: Deploy Production
@@ -73,43 +60,19 @@ jobs:
       - uses: ./.github/actions/setup-node-pnpm
 
       - name: Pull Vercel production environment
-        run: pnpm exec vercel pull --yes --environment=production
+        run: pnpm exec vercel pull --yes --environment=production --scope "$VERCEL_ORG_ID"
 
       - name: Build Vercel production artifacts
         run: pnpm exec vercel build --prod --yes
 
       - name: Run production database migrations
-        run: pnpm exec vercel env run --environment=production -- pnpm db:migrate
+        run: pnpm exec vercel env run --environment=production --scope "$VERCEL_ORG_ID" -- pnpm db:migrate
 
       - name: Create unaliased production deployment
         id: deploy
-        run: |
-          set -euo pipefail
-
-          if ! deployment_output="$(pnpm exec vercel deploy --prebuilt --prod --skip-domain --yes --no-wait --format=json)"; then
-            printf '%s\n' "$deployment_output"
-            exit 1
-          fi
-
-          if ! deployment_url="$(printf '%s\n' "$deployment_output" | jq -r '.url // .deployment.url // empty')"; then
-            printf '%s\n' "$deployment_output"
-            echo "Unable to parse deployment JSON output." >&2
-            exit 1
-          fi
-
-          if [ -z "$deployment_url" ]; then
-            printf '%s\n' "$deployment_output"
-            echo "Unable to determine deployment URL." >&2
-            exit 1
-          fi
-
-          echo "url=$deployment_url" >> "$GITHUB_OUTPUT"
-          {
-            echo "### Production deployment"
-            echo "- URL: $deployment_url"
-            echo "- Commit: ${{ github.event.workflow_run.head_sha }}"
-            echo "- Promotion: pending smoke check"
-          } >> "$GITHUB_STEP_SUMMARY"
+        env:
+          COMMIT_SHA: ${{ github.event.workflow_run.head_sha }}
+        run: bash scripts/ci/deploy-vercel-production.sh
 
       - name: Wait for Vercel production deployment
         env:
@@ -117,7 +80,7 @@ jobs:
         run: |
           set -euo pipefail
 
-          pnpm exec vercel inspect "$DEPLOYMENT_URL" --wait --timeout 10m --logs
+          pnpm exec vercel inspect "$DEPLOYMENT_URL" --wait --timeout 10m --logs --scope "$VERCEL_ORG_ID"
 
       - name: Smoke check production deployment
         env:
@@ -125,11 +88,6 @@ jobs:
         run: bash scripts/ci/smoke-check.sh
 
       - name: Promote production deployment
-        run: |
-          set -euo pipefail
-
-          pnpm exec vercel promote "${{ steps.deploy.outputs.url }}" --yes
-          {
-            echo "### Production promotion"
-            echo "- Promoted: ${{ steps.deploy.outputs.url }}"
-          } >> "$GITHUB_STEP_SUMMARY"
+        env:
+          DEPLOYMENT_URL: ${{ steps.deploy.outputs.url }}
+        run: bash scripts/ci/promote-vercel-production.sh

@@ -1,0 +1,40 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+: "${VERCEL_ORG_ID:?VERCEL_ORG_ID is required}"
+
+if ! deployment_output="$(pnpm exec vercel deploy \
+  --prebuilt \
+  --target=preview \
+  --yes \
+  --no-wait \
+  --format=json \
+  --scope "$VERCEL_ORG_ID" \
+  --env DATABASE_URL="$DATABASE_URL" \
+  --env DATABASE_URL_UNPOOLED="$DATABASE_URL_UNPOOLED" \
+  --meta githubCommitSha="$HEAD_SHA" \
+  --meta githubCommitRef="$GIT_BRANCH")"; then
+  printf '%s\n' "$deployment_output"
+  exit 1
+fi
+
+if ! deployment_url="$(printf '%s\n' "$deployment_output" | jq -r '.url // .deployment.url // empty')"; then
+  printf '%s\n' "$deployment_output"
+  echo "Unable to parse deployment JSON output." >&2
+  exit 1
+fi
+
+if [ -z "$deployment_url" ]; then
+  printf '%s\n' "$deployment_output"
+  echo "Unable to determine deployment URL." >&2
+  exit 1
+fi
+
+echo "url=$deployment_url" >> "$GITHUB_OUTPUT"
+{
+  echo "### Preview deployment"
+  echo "- URL: $deployment_url"
+  echo "- Git branch: $GIT_BRANCH"
+  echo "- Neon branch: $NEON_BRANCH"
+  echo "- Readiness: pending"
+} >> "$GITHUB_STEP_SUMMARY"
