@@ -53,6 +53,10 @@ jobs:
           echo "git_branch=$git_branch" >> "$GITHUB_OUTPUT"
           echo "head_sha=$head_sha" >> "$GITHUB_OUTPUT"
 
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.workflow_sha }}
+
       - name: Verify pull request is still open and current
         id: pr
         env:
@@ -60,72 +64,7 @@ jobs:
           GIT_BRANCH: ${{ steps.source.outputs.git_branch }}
           HEAD_SHA: ${{ steps.source.outputs.head_sha }}
           EVENT_PR_NUMBER: ${{ github.event.workflow_run.pull_requests[0].number }}
-        run: |
-          set -euo pipefail
-
-          pr_number=""
-
-          write_outputs() {
-            {
-              echo "number=${pr_number:-}"
-              echo "should_deploy=$1"
-            } >> "$GITHUB_OUTPUT"
-          }
-
-          skip_preview() {
-            local reason="$1"
-            write_outputs false
-            echo "::notice::$reason"
-            {
-              echo "### Preview deployment skipped"
-              echo "- Reason: $reason"
-              echo "- Git branch: $GIT_BRANCH"
-              echo "- Workflow SHA: $HEAD_SHA"
-              if [ -n "${pr_number:-}" ]; then
-                echo "- Pull request: #$pr_number"
-              fi
-            } >> "$GITHUB_STEP_SUMMARY"
-          }
-
-          if [ -n "$EVENT_PR_NUMBER" ]; then
-            pr_json="$(gh pr view "$EVENT_PR_NUMBER" --repo "$GITHUB_REPOSITORY" --json number,state,headRefName,headRefOid,isCrossRepository)"
-          else
-            pr_json="$(gh pr list --repo "$GITHUB_REPOSITORY" --head "$GIT_BRANCH" --state open --json number,state,headRefName,headRefOid,isCrossRepository --jq '.[0] // empty')"
-          fi
-
-          if [ -z "$pr_json" ] || [ "$pr_json" = "null" ]; then
-            skip_preview "No open pull request was found for $GIT_BRANCH."
-            exit 0
-          fi
-
-          pr_number="$(printf '%s\n' "$pr_json" | jq -r '.number // empty')"
-          pr_state="$(printf '%s\n' "$pr_json" | jq -r '.state // empty')"
-          pr_head_ref="$(printf '%s\n' "$pr_json" | jq -r '.headRefName // empty')"
-          pr_head_sha="$(printf '%s\n' "$pr_json" | jq -r '.headRefOid // empty')"
-          is_cross_repo="$(printf '%s\n' "$pr_json" | jq -r '.isCrossRepository // false')"
-
-          if [ "$pr_state" != "OPEN" ]; then
-            skip_preview "Pull request #$pr_number is no longer open."
-            exit 0
-          fi
-
-          if [ "$is_cross_repo" = "true" ]; then
-            skip_preview "Pull request #$pr_number is from a fork."
-            exit 0
-          fi
-
-          if [ "$pr_head_ref" != "$GIT_BRANCH" ]; then
-            skip_preview "Pull request #$pr_number now points at $pr_head_ref, not $GIT_BRANCH."
-            exit 0
-          fi
-
-          if [ "$pr_head_sha" != "$HEAD_SHA" ]; then
-            skip_preview "Pull request #$pr_number moved from $HEAD_SHA to $pr_head_sha."
-            exit 0
-          fi
-
-          write_outputs true
-          echo "Pull request #$pr_number is open and still points at $HEAD_SHA."
+        run: bash scripts/ci/verify-preview-pr.sh
 
       - uses: actions/checkout@v4
         if: ${{ steps.pr.outputs.should_deploy == 'true' }}
@@ -167,7 +106,7 @@ jobs:
         if: ${{ steps.pr.outputs.should_deploy == 'true' }}
         env:
           GIT_BRANCH: ${{ steps.preview.outputs.git_branch }}
-        run: pnpm exec vercel pull --yes --environment=preview --git-branch="$GIT_BRANCH"
+        run: pnpm exec vercel pull --yes --environment=preview --git-branch="$GIT_BRANCH" --scope "$VERCEL_ORG_ID"
 
       - name: Run preview database migrations
         if: ${{ steps.pr.outputs.should_deploy == 'true' }}
@@ -190,45 +129,10 @@ jobs:
         env:
           GIT_BRANCH: ${{ steps.preview.outputs.git_branch }}
           HEAD_SHA: ${{ steps.preview.outputs.head_sha }}
+          NEON_BRANCH: ${{ steps.preview.outputs.neon_branch }}
           DATABASE_URL: ${{ steps.create_neon_branch.outputs.db_url_pooled || steps.create_neon_branch.outputs.db_url_with_pooler }}
           DATABASE_URL_UNPOOLED: ${{ steps.create_neon_branch.outputs.db_url }}
-        run: |
-          set -euo pipefail
-
-          if ! deployment_output="$(pnpm exec vercel deploy \
-            --prebuilt \
-            --target=preview \
-            --yes \
-            --no-wait \
-            --format=json \
-            --env DATABASE_URL="$DATABASE_URL" \
-            --env DATABASE_URL_UNPOOLED="$DATABASE_URL_UNPOOLED" \
-            --meta githubCommitSha="$HEAD_SHA" \
-            --meta githubCommitRef="$GIT_BRANCH")"; then
-            printf '%s\n' "$deployment_output"
-            exit 1
-          fi
-
-          if ! deployment_url="$(printf '%s\n' "$deployment_output" | jq -r '.url // .deployment.url // empty')"; then
-            printf '%s\n' "$deployment_output"
-            echo "Unable to parse deployment JSON output." >&2
-            exit 1
-          fi
-
-          if [ -z "$deployment_url" ]; then
-            printf '%s\n' "$deployment_output"
-            echo "Unable to determine deployment URL." >&2
-            exit 1
-          fi
-
-          echo "url=$deployment_url" >> "$GITHUB_OUTPUT"
-          {
-            echo "### Preview deployment"
-            echo "- URL: $deployment_url"
-            echo "- Git branch: $GIT_BRANCH"
-            echo "- Neon branch: ${{ steps.preview.outputs.neon_branch }}"
-            echo "- Readiness: pending"
-          } >> "$GITHUB_STEP_SUMMARY"
+        run: bash scripts/ci/deploy-vercel-preview.sh
 
       - name: Wait for Vercel preview deployment
         if: ${{ steps.pr.outputs.should_deploy == 'true' }}
@@ -237,7 +141,7 @@ jobs:
         run: |
           set -euo pipefail
 
-          pnpm exec vercel inspect "$DEPLOYMENT_URL" --wait --timeout 10m --logs
+          pnpm exec vercel inspect "$DEPLOYMENT_URL" --wait --timeout 10m --logs --scope "$VERCEL_ORG_ID"
 
       - name: Smoke check preview deployment
         if: ${{ steps.pr.outputs.should_deploy == 'true' }}
